@@ -42,7 +42,21 @@ phases:
       - echo Pushing the Docker image...
       - docker push $REPOSITORY_URI:$IMAGE_TAG
       - echo Writing taskdef.json...
-      - aws ecs describe-task-definition --task-definition ${TASK_DEF_NAME} | jq '.taskDefinition | .containerDefinitions[].image = "${REPOSITORY_URI}:${IMAGE_TAG}"' > taskdef.json
+      # - aws ecs describe-task-definition --task-definition ${TASK_DEF_NAME} | jq '.taskDefinition | .containerDefinitions[].image = "${REPOSITORY_URI}:${IMAGE_TAG}"' > taskdef.json
+      - aws ecs describe-task-definition --task-definition ${TASK_DEF_NAME} | \ 
+        jq '.taskDefinition | { \
+                                family, \ 
+                                taskRoleArn, \
+                                executionRoleArn, \
+                                networkMode, \
+                                containerDefinitions, \
+                                volumes, \
+                                placementConstraints, \
+                                requiresCompatibilities, \
+                                cpu, \
+                                memory, \
+                                runtimePlatform\
+                              }' > taskdef.json
       - cat taskdef.json
       - echo Updating Task Definition...
       - aws ecs register-task-definition --cli-input-json file://taskdef.json
