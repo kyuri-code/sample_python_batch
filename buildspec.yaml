@@ -1,0 +1,48 @@
+version: 0.2
+
+phases:
+  install:
+    runtime-versions:
+      python: 3.9
+    commands:
+      - echo "Installing Python dependencies..."
+      - pip install --upgrade pip
+      - pip install -r requirements.txt
+  pre_build:
+    commands:
+      - echo "Loginging in to Amazon ECR..."
+      - aws --version
+      - ACCOUNT_ID=$(aws sts get-caller-identity --query 'Account' --output text)
+      - aws ecr get-login-password --region $AWS_DEFAULT_REGION | docker login --username AWS --password-stdin $ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com
+      - echo Logging in to DockerHub...
+      - echo $DOCKER_TOKEN | docker login -u $DOCKER_USER --password-stdin
+      - REPOSITORY_URI=${ACCOUNT_ID}.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/${REPOSITORY_NAME}
+      - COMMIT_HASH=$(echo $CODEBUILD_RESOLVED_SOURCE_VERSION | cut -c 1-7)
+      - DATETIME=$(date "+%Y%m%d-%H-%M-%S" --date "9 hour")
+      - IMAGE_TAG=$DATETIME-$COMMIT_HASH
+      # - IMAGE_TAG="latest"
+      - echo $IMAGE_TAG
+
+      - echo Replace Env File
+      - sed -i 's/<SECRET_ID>/$SECRET_ID/g; s/<AWS_DEFAULT_REGION>/$AWS_DEFAULT_REGION/g' .env
+
+  build:
+    commands:
+      - echo Build started on `date`
+      - echo Building the Docker image...
+      - docker build -t $REPOSITORY_URI:$IMAGE_TAG .
+  post_build:
+    commands:
+      - echo Build completed on `date`
+      - echo Pushing the Docker image...
+      - docker push $REPOSITORY_URI:$IMAGE_TAG
+      - echo Writing taskdef.json...
+      - aws ecs describe-task-definition --task-definition ${TASK_DEF_NAME} | jq '.taskDefinition | .containerDefinitions[].image = "<IMAGE1_NAME>"' > taskdef.json
+      - echo Writing image details...
+      - printf '{"Version":"1.0","ImageURI":"%s"}' $REPOSITORY_URI:$IMAGE_TAG > imageDetail.json
+      - cat taskdef.json
+      - cat imageDetail.json
+artifacts:
+  files:
+    - taskdef.json
+    - imageDetail.json
