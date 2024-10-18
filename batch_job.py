@@ -4,6 +4,7 @@ import os
 
 import boto3
 from sqlalchemy import create_engine
+from sqlalchemy import text
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.ext.declarative import declarative_base
 from dotenv import load_dotenv
@@ -72,7 +73,7 @@ def run_batch_job():
 
     # データベースに対するクエリ例（必要に応じてテーブルやORMクラスを定義）
     logging.info("Getting data from db...")
-    result = session.execute("SELECT version();")
+    result = session.execute(text("SELECT version();"))
     for row in result:
         print(f"PostgreSQL Version: {row[0]}")
     
