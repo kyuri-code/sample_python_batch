@@ -27,9 +27,9 @@ phases:
       - IMAGE_TAG=$DATETIME-$COMMIT_HASH
       # - IMAGE_TAG="latest"
       - echo $IMAGE_TAG
-
       - echo Replace Env File
-      - sed -i "s/<SECRET_ID>/$SECRET_ID/g; s/<AWS_DEFAULT_REGION>/$AWS_DEFAULT_REGION/g" .env
+      - sed -i "s|<SECRET_ID>|$SECRET_ID|g" .env
+      - sed -i "s|<AWS_DEFAULT_REGION>|$AWS_DEFAULT_REGION|g" .env
       - cat .env
 
   build:
