@@ -1,4 +1,5 @@
 boto3
-psycopg2-binary
+#psycopg2-binary
+pymysql
 SQLAlchemy
 python-dotenv
