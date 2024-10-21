@@ -34,11 +34,11 @@ def get_database_engine(db_credentials):
     username = db_credentials["username"]
     password = db_credentials["password"]
     host = db_credentials["host"]
-    dbname = "sample_db"
-    port = db_credentials.get("port", 5432)  # ポートが指定されていない場合はデフォルトで5432
+    dbname = db_credentials["dbname"]
+    port = db_credentials.get("port", 3306)  # ポートが指定されていない場合はデフォルトで5432
 
     # PostgreSQLの接続URLを構築
-    database_url = f"postgresql://{username}:{password}@{host}:{port}/{dbname}"
+    database_url = f"mysql+pymysql://{username}:{password}@{host}:{port}/{dbname}"
     engine = create_engine(database_url, echo=True)  # echo=TrueでSQLログを表示
     return engine
 
@@ -73,9 +73,9 @@ def run_batch_job():
 
     # データベースに対するクエリ例（必要に応じてテーブルやORMクラスを定義）
     logging.info("Getting data from db...")
-    result = session.execute(text("SELECT version();"))
+    result = session.execute(text("SELECT 'hello world'"))
     for row in result:
-        print(f"PostgreSQL Version: {row[0]}")
+        print(f"Test Query Result: {row[0]}")
     
     session.close()
     logging.info("Batch job completed.")
